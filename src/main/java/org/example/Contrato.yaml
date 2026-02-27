@@ -1,0 +1,434 @@
+openapi: 3.1.0
+info:
+  title: API Gestión de Solicitudes Académicas
+  version: 1.0.0
+  description: Servicios REST para manejar solicitudes, usuarios, historial y funcionalidades de IA.
+
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+
+  /auth/login:
+    post:
+      summary: Autenticación de usuario
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token JWT generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales inválidas
+
+  /solicitudes:
+    post:
+      summary: Registrar nueva solicitud
+      operationId: registrarSolicitud
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearSolicitudDTO'
+      responses:
+        '201':
+          description: Solicitud registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolicitudDTO'
+
+    get:
+      summary: Consultar solicitudes
+      operationId: consultarSolicitud
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: estadoSolicitud
+          schema:
+            $ref: '#/components/schemas/EstadoSolicitud'
+        - in: query
+          name: tipoSolicitud
+          schema:
+            $ref: '#/components/schemas/TipoSolicitud'
+        - in: query
+          name: prioridad
+          schema:
+            type: string
+        - in: query
+          name: responsable
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de solicitudes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SolicitudDTO'
+
+  /solicitudes/{id}:
+    get:
+      summary: Obtener detalle de una solicitud
+      operationId: obtenerDetalle
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalle de la solicitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolicitudDTO'
+
+  /solicitudes/{id}/clasificar:
+    put:
+      summary: Clasificar solicitud
+      operationId: clasificarSolicitud
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClasificacionDTO'
+      responses:
+        '200':
+          description: Solicitud clasificada
+
+  /solicitudes/{id}/priorizar:
+    put:
+      summary: Asignar prioridad
+      operationId: asignarPrioridad
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrioridadSolicitudDTO'
+      responses:
+        '200':
+          description: Prioridad asignada
+
+  /solicitudes/{id}/responsable:
+    put:
+      summary: Asignar responsable
+      operationId: asignarResponsable
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResponsableDTO'
+      responses:
+        '200':
+          description: Responsable asignado
+
+  /solicitudes/{id}/historial:
+    get:
+      summary: Consultar historial
+      operationId: consultarHistorial
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Historial de acciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistorialSolicitudDTO'
+
+  /solicitudes/{id}/cerrar:
+    put:
+      summary: Cerrar solicitud
+      operationId: cerrarSolicitud
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CierreDTO'
+      responses:
+        '200':
+          description: Solicitud cerrada
+
+  /solicitudes/{id}/resumen:
+    get:
+      summary: Generar resumen automático de la solicitud (IA)
+      operationId: generarResumenSolicitud
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resumen generado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenSolicitudDTO'
+        '404':
+          description: Solicitud no encontrada
+        '503':
+          description: Servicio de IA no disponible
+  /solicitudes/sugerir-clasificacion:
+    post:
+      summary: Sugerir clasificación automática (IA)
+      operationId: sugerirClasificacionAutomatica
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SugerenciaClasificacionRequestDTO'
+      responses:
+        '200':
+          description: Sugerencia generada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SugerenciaClasificacionResponseDTO'
+        '503':
+          description: Servicio de IA no disponible
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    CrearSolicitudDTO:
+      type: object
+      required: [descripcion, tipoSolicitud, canalOrigen, solicitante]
+      properties:
+        descripcion:
+          type: string
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+        canalOrigen:
+          type: string
+        solicitante:
+          type: string
+
+    SolicitudDTO:
+      type: object
+      properties:
+        idSolicitud:
+          type: string
+        descripcion:
+          type: string
+        fechaHoraRegistro:
+          type: string
+          format: date-time
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+        canalOrigen:
+          type: string
+        estadoSolicitud:
+          $ref: '#/components/schemas/EstadoSolicitud'
+        fechaLimite:
+          type: string
+          format: date
+        solicitante:
+          $ref: '#/components/schemas/UsuarioDTO'
+        responsableAsignado:
+          $ref: '#/components/schemas/UsuarioDTO'
+        prioridad:
+          $ref: '#/components/schemas/PrioridadSolicitudDTO'
+
+    ClasificacionDTO:
+      type: object
+      properties:
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+
+    PrioridadSolicitudDTO:
+      type: object
+      properties:
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+        impacto:
+          type: string
+        fechaLimite:
+          type: string
+          format: date
+        justificacion:
+          type: string
+
+    ResponsableDTO:
+      type: object
+      properties:
+        usuarioId:
+          type: string
+
+    HistorialSolicitudDTO:
+      type: object
+      properties:
+        idHistorial:
+          type: string
+        fechaHora:
+          type: string
+          format: date-time
+        accionRealizada:
+          type: string
+        observaciones:
+          type: string
+        usuario:
+          $ref: '#/components/schemas/UsuarioDTO'
+
+    CierreDTO:
+      type: object
+      properties:
+        observacion:
+          type: string
+
+    ResumenSolicitudDTO:
+      type: object
+      properties:
+        idSolicitud:
+          type: string
+        resumenGenerado:
+          type: string
+        fechaGeneracion:
+          type: string
+          format: date-time
+
+    SugerenciaClasificacionRequestDTO:
+      type: object
+      required: [descripcion]
+      properties:
+        descripcion:
+          type: string
+
+    SugerenciaClasificacionResponseDTO:
+      type: object
+      properties:
+        tipoSolicitudSugerido:
+          $ref: '#/components/schemas/TipoSolicitud'
+        prioridadSugerida:
+          type: string
+        justificacionIA:
+          type: string
+
+    UsuarioDTO:
+      type: object
+      properties:
+        idUsuario:
+          type: string
+        nombre:
+          type: string
+        correo:
+          type: string
+        rol:
+          $ref: '#/components/schemas/Rol'
+        activo:
+          type: boolean
+
+    TipoSolicitud:
+      type: string
+      enum:
+        - RegistroAsignaturas
+        - Homologacion
+        - CancelacionAsignaturas
+        - SolicitudCupos
+        - ConsultaAcademica
+
+    EstadoSolicitud:
+      type: string
+      enum:
+        - Registrada
+        - Clasificada
+        - EnAtencion
+        - Atendida
+        - Cerrada
+
+    Rol:
+      type: string
+      enum:
+        - Estudiante
+        - Docente
+        - Administrativo

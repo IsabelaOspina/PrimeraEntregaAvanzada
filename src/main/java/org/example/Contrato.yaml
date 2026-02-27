@@ -283,7 +283,7 @@ components:
 
     CrearSolicitudDTO:
       type: object
-      required: [descripcion, tipoSolicitud, canalOrigen, solicitante]
+      required: [ descripcion, tipoSolicitud, canalOrigen, solicitanteId ]
       properties:
         descripcion:
           type: string
@@ -291,7 +291,7 @@ components:
           $ref: '#/components/schemas/TipoSolicitud'
         canalOrigen:
           type: string
-        solicitante:
+        solicitanteId:
           type: string
 
     SolicitudDTO:
@@ -313,6 +313,8 @@ components:
         fechaLimite:
           type: string
           format: date
+        justificacionPrioridad:
+          type: string
         solicitante:
           $ref: '#/components/schemas/UsuarioDTO'
         responsableAsignado:

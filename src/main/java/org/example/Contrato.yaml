@@ -21,13 +21,15 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Token JWT generado
+          description: Token JWT generado correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Datos de entrada inválidos
         '401':
-          description: Credenciales inválidas
+          description: Credenciales incorrectas
 
   /solicitudes:
     post:
@@ -43,11 +45,15 @@ paths:
               $ref: '#/components/schemas/CrearSolicitudDTO'
       responses:
         '201':
-          description: Solicitud registrada
+          description: Solicitud registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SolicitudDTO'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autenticado
 
     get:
       summary: Consultar solicitudes
@@ -80,6 +86,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SolicitudDTO'
+        '401':
+          description: No autenticado
+
 
   /solicitudes/{id}:
     get:
@@ -95,11 +104,15 @@ paths:
             type: string
       responses:
         '200':
-          description: Detalle de la solicitud
+          description: Solicitud encontrada
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SolicitudDTO'
+        '401':
+          description: No autenticado
+        '404':
+          description: Solicitud no encontrada
 
   /solicitudes/{id}/clasificar:
     put:
@@ -122,6 +135,14 @@ paths:
       responses:
         '200':
           description: Solicitud clasificada
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autenticado
+        '404':
+          description: Solicitud no encontrada
+        '409':
+          description: La solicitud ya fue clasificada
 
   /solicitudes/{id}/priorizar:
     put:
@@ -143,7 +164,13 @@ paths:
               $ref: '#/components/schemas/PrioridadSolicitudDTO'
       responses:
         '200':
-          description: Prioridad asignada
+          description: Prioridad asignada correctamente
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autenticado
+        '404':
+          description: Solicitud no encontrada
 
   /solicitudes/{id}/responsable:
     put:
@@ -166,6 +193,10 @@ paths:
       responses:
         '200':
           description: Responsable asignado
+        '401':
+          description: No autenticado
+        '404':
+          description: Solicitud no encontrada
 
   /solicitudes/{id}/historial:
     get:
@@ -181,13 +212,17 @@ paths:
             type: string
       responses:
         '200':
-          description: Historial de acciones
+          description: Historial obtenido correctamente
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/HistorialSolicitudDTO'
+        '401':
+          description: No autenticado
+        '404':
+          description: Solicitud no encontrada
 
   /solicitudes/{id}/cerrar:
     put:
@@ -209,7 +244,13 @@ paths:
               $ref: '#/components/schemas/CierreDTO'
       responses:
         '200':
-          description: Solicitud cerrada
+          description: Solicitud cerrada correctamente
+        '401':
+          description: No autenticado
+        '404':
+          description: Solicitud no encontrada
+        '409':
+          description: La solicitud ya está cerrada
 
   /solicitudes/{id}/resumen:
     get:

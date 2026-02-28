@@ -50,21 +50,6 @@ La interfaz de programación (API) sigue la especificación OpenAPI 3.1.0. A con
 
 - GET /solicitudes/{id}/resumen: Genera un resumen automático y conciso de una solicitud (basado en su descripción, historial, etc.) para facilitar su comprensión rápida.
 
-### 3. Estados del Flujo de Trabajo (EstadoSolicitud)
-El ciclo de vida de una solicitud está definido por la máquina de estados EstadoSolicitud. El flujo típico es el siguiente:
-
-- REGISTRADA: Estado inicial. La solicitud ha sido creada por un usuario en el sistema. Está pendiente de ser analizada.
-
-- CLASIFICADA: Una vez analizada, un administrativo (o un sistema de IA) le ha asignado un tipo y posiblemente una prioridad. La solicitud está lista para ser asignada.
-
-- EN_ATENCION: Se ha asignado un responsable (ej. un docente o administrativo específico) que está trabajando activamente en la resolución de la solicitud.
-
-- ATENDIDA: El responsable ha completado las acciones necesarias para resolver la solicitud (ej. se ha realizado la homologación). La solución está lista, pero el proceso administrativo no se considera cerrado.
-
-- CERRADA: Estado final. Se ha dado una respuesta formal al solicitante y se ha archivado la solicitud. No se pueden realizar más acciones sobre ella.
-
-
-
 
 ## Modelado de Dominio
 

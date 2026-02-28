@@ -1,77 +1,72 @@
-##README: API de Gestión de Solicitudes Académicas
+## README: API de Gestión de Solicitudes Académicas
 Este documento describe la arquitectura y el funcionamiento de la API para la gestión de solicitudes académicas. El sistema está diseñado para digitalizar y automatizar el flujo de trabajo de peticiones como registro de asignaturas, homologaciones, solicitudes de cupo, entre otras, incorporando capacidades de inteligencia artificial para asistir en la clasificación y generación de resúmenes.
 
-1. Modelo de Datos (Diagrama de Clases)
-El núcleo del sistema se basa en las siguientes entidades, representadas en el diagrama de clases image.png:
+#### 1. Modelo de Datos 
+El núcleo del sistema se basa en las siguientes entidades:
 
-Solicitud: Es la entidad principal del sistema. Representa una petición hecha por un usuario. Contiene atributos como la descripción, fechas, canal de origen, y referencias al solicitante y al responsable. Su comportamiento y estado se rigen por los enumerados TipoSolicitud y EstadoSolicitud.
+  - Solicitud: Es la entidad principal del sistema. Representa una petición hecha por un usuario. 
+  
+  - Usuario: Representa a todas las personas que interactúan con el sistema, Un usuario puede ser el solicitante o el responsableAsignado.
+  
+ -  HistorialSolicitud: Almacena un registro de auditoría de todas las acciones realizadas sobre una solicitud.
+  
+  #### Enumerados (<<Enum>>):
+  
+  - TipoSolicitud: Define la naturaleza de la solicitud (ej. REGISTRO_ASIGNATURA, HOMOLOGACION).
+  
+  - EstadoSolicitud: Define la etapa del ciclo de vida en la que se encuentra una solicitud (ej. REGISTRADA, EN_ATENCION).
+  
 
-Usuario: Representa a todas las personas que interactúan con el sistema (Estudiantes, Docentes, Administrativos). Un usuario puede ser el solicitante (quien crea la solicitud) o el responsableAsignado (quien la atiende).
+### 2. Contratos de la API (OpenAPI / Swagger)
+La interfaz de programación (API) sigue la especificación OpenAPI 3.1.0. A continuación, se detallan los endpoints más importantes agrupados por funcionalidad.
 
-HistorialSolicitud: Almacena un registro de auditoría de todas las acciones realizadas sobre una solicitud. Cada vez que una solicitud cambia de estado, se clasifica, se le asigna un responsable, etc., se crea un registro en esta entidad para mantener la trazabilidad completa.
+#### Autenticación:
 
-Enumerados (<<Enum>>):
+- POST /auth/login: Permite a los usuarios obtener un token JWT enviando sus credenciales (username/password). Este token debe ser incluido en el encabezado Authorization: Bearer <token> para acceder al resto de los endpoints seguros.
 
-TipoSolicitud: Define la naturaleza de la solicitud (ej. REGISTRO_ASIGNATURA, HOMOLOGACION).
+#### Gestión de Solicitudes (Endpoints principales):
 
-EstadoSolicitud: Define la etapa del ciclo de vida en la que se encuentra una solicitud (ej. REGISTRADA, EN_ATENCION).
+- POST /solicitudes: Crea una nueva solicitud en el sistema. El cuerpo de la petición (CrearSolicitudDTO) requiere al menos la descripción, el tipo de solicitud, el canal de origen y el ID del solicitante. La solicitud se crea automáticamente con el estado REGISTRADA.
 
-Relaciones Clave:
+- GET /solicitudes: Consulta una lista de solicitudes. Permite filtrar por estadoSolicitud, tipoSolicitud, prioridad y responsable mediante parámetros de consulta (query params).
 
-Una Solicitud es creada por un Usuario (solicitante) y puede ser atendida por otro Usuario (responsable).
+- GET /solicitudes/{id}: Obtiene el detalle completo de una solicitud específica, incluyendo la información del solicitante y responsable.
 
-Una Solicitud puede tener múltiples registros en su HistorialSolicitud (relación 1 a muchos).
+#### Flujo de Trabajo (Workflow):
 
-2. Contratos de la API (OpenAPI / Swagger)
-La interfaz de programación (API) sigue la especificación OpenAPI 3.1.0. A continuación, se detallan los puntos finales (endpoints) más importantes, agrupados por funcionalidad.
+- PUT /solicitudes/{id}/clasificar: Cambia el estado de una solicitud de REGISTRADA a CLASIFICADA. El cuerpo (ClasificacionDTO) confirma el tipoSolicitud.
 
-Autenticación:
+- PUT /solicitudes/{id}/priorizar: Permite asignar una prioridad y fecha límite a una solicitud, lo cual es crucial para la gestión de SLAs. (El estado puede cambiar o permanecer según la lógica de negocio).
 
-POST /auth/login: Permite a los usuarios obtener un token JWT enviando sus credenciales (username/password). Este token debe ser incluido en el encabezado Authorization: Bearer <token> para acceder al resto de los endpoints seguros.
+- PUT /solicitudes/{id}/responsable: Asigna un Usuario (por su ID) como responsable de la solicitud. Esto mueve la solicitud al estado EN_ATENCION.
 
-Gestión de Solicitudes (Endpoints principales):
+- PUT /solicitudes/{id}/cerrar: Finaliza el ciclo de vida de una solicitud, moviéndola al estado CERRADA. Se pueden incluir observaciones finales (CierreDTO).
 
-POST /solicitudes: Crea una nueva solicitud en el sistema. El cuerpo de la petición (CrearSolicitudDTO) requiere al menos la descripción, el tipo de solicitud, el canal de origen y el ID del solicitante. La solicitud se crea automáticamente con el estado REGISTRADA.
+- GET /solicitudes/{id}/historial: Recupera todos los registros de auditoría (HistorialSolicitudDTO) asociados a una solicitud, mostrando la secuencia de acciones realizadas.
 
-GET /solicitudes: Consulta una lista de solicitudes. Permite filtrar por estadoSolicitud, tipoSolicitud, prioridad y responsable mediante parámetros de consulta (query params).
+#### Funcionalidades de IA (Inteligencia Artificial):
 
-GET /solicitudes/{id}: Obtiene el detalle completo de una solicitud específica, incluyendo la información del solicitante y responsable.
+- POST /solicitudes/sugerir-clasificacion: Un endpoint de ayuda. Recibe una descripción de solicitud y, utilizando un servicio de IA, devuelve una sugerencia de tipoSolicitud y una prioridadSugerida. Esto asiste al administrativo durante el proceso de clasificación.
 
-Flujo de Trabajo (Workflow):
+- GET /solicitudes/{id}/resumen: Genera un resumen automático y conciso de una solicitud (basado en su descripción, historial, etc.) para facilitar su comprensión rápida.
 
-PUT /solicitudes/{id}/clasificar: Cambia el estado de una solicitud de REGISTRADA a CLASIFICADA. El cuerpo (ClasificacionDTO) confirma el tipoSolicitud.
-
-PUT /solicitudes/{id}/priorizar: Permite asignar una prioridad y fecha límite a una solicitud, lo cual es crucial para la gestión de SLAs. (El estado puede cambiar o permanecer según la lógica de negocio).
-
-PUT /solicitudes/{id}/responsable: Asigna un Usuario (por su ID) como responsable de la solicitud. Esto mueve la solicitud al estado EN_ATENCION.
-
-PUT /solicitudes/{id}/cerrar: Finaliza el ciclo de vida de una solicitud, moviéndola al estado CERRADA. Se pueden incluir observaciones finales (CierreDTO).
-
-GET /solicitudes/{id}/historial: Recupera todos los registros de auditoría (HistorialSolicitudDTO) asociados a una solicitud, mostrando la secuencia de acciones realizadas.
-
-Funcionalidades de IA (Inteligencia Artificial):
-
-POST /solicitudes/sugerir-clasificacion: Un endpoint de ayuda. Recibe una descripción de solicitud y, utilizando un servicio de IA, devuelve una sugerencia de tipoSolicitud y una prioridadSugerida. Esto asiste al administrativo durante el proceso de clasificación.
-
-GET /solicitudes/{id}/resumen: Genera un resumen automático y conciso de una solicitud (basado en su descripción, historial, etc.) para facilitar su comprensión rápida.
-
-3. Estados del Flujo de Trabajo (EstadoSolicitud)
+### 3. Estados del Flujo de Trabajo (EstadoSolicitud)
 El ciclo de vida de una solicitud está definido por la máquina de estados EstadoSolicitud. El flujo típico es el siguiente:
 
-REGISTRADA: Estado inicial. La solicitud ha sido creada por un usuario en el sistema. Está pendiente de ser analizada.
+- REGISTRADA: Estado inicial. La solicitud ha sido creada por un usuario en el sistema. Está pendiente de ser analizada.
 
-CLASIFICADA: Una vez analizada, un administrativo (o un sistema de IA) le ha asignado un tipo y posiblemente una prioridad. La solicitud está lista para ser asignada.
+- CLASIFICADA: Una vez analizada, un administrativo (o un sistema de IA) le ha asignado un tipo y posiblemente una prioridad. La solicitud está lista para ser asignada.
 
-EN_ATENCION: Se ha asignado un responsable (ej. un docente o administrativo específico) que está trabajando activamente en la resolución de la solicitud.
+- EN_ATENCION: Se ha asignado un responsable (ej. un docente o administrativo específico) que está trabajando activamente en la resolución de la solicitud.
 
-ATENDIDA: El responsable ha completado las acciones necesarias para resolver la solicitud (ej. se ha realizado la homologación). La solución está lista, pero el proceso administrativo no se considera cerrado.
+- ATENDIDA: El responsable ha completado las acciones necesarias para resolver la solicitud (ej. se ha realizado la homologación). La solución está lista, pero el proceso administrativo no se considera cerrado.
 
-CERRADA: Estado final. Se ha dado una respuesta formal al solicitante y se ha archivado la solicitud. No se pueden realizar más acciones sobre ella.
-
-
+- CERRADA: Estado final. Se ha dado una respuesta formal al solicitante y se ha archivado la solicitud. No se pueden realizar más acciones sobre ella.
 
 
-##Modelado de Dominio
+
+
+## Modelado de Dominio
 
 Diagrama UML del sistema:
 

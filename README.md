@@ -1,6 +1,10 @@
 ## README: API de Gestión de Solicitudes Académicas
 Este documento describe la arquitectura y el funcionamiento de la API para la gestión de solicitudes académicas. El sistema está diseñado para digitalizar y automatizar el flujo de trabajo de peticiones como registro de asignaturas, homologaciones, solicitudes de cupo, entre otras, incorporando capacidades de inteligencia artificial para asistir en la clasificación y generación de resúmenes.
 
+## Presentado por:
+Nikoll Sofia Ocampo Gomez
+Isabela Ospina Baquero
+
 #### 1. Modelo de Datos 
 El núcleo del sistema se basa en las siguientes entidades:
 
